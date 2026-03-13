@@ -3,18 +3,19 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>남은 인생 계산기</title>
+  <title>나의 진짜 시간</title>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
 
     body {
       min-height: 100vh;
       display: flex;
-      align-items: center;
+      align-items: flex-start;
       justify-content: center;
       background: #0f0f0f;
       font-family: 'Segoe UI', sans-serif;
       color: #f0f0f0;
+      padding: 48px 16px;
     }
 
     .card {
@@ -23,27 +24,26 @@
       border-radius: 20px;
       padding: 48px 40px;
       width: 100%;
-      max-width: 460px;
-      text-align: center;
+      max-width: 560px;
     }
 
     h1 {
       font-size: 1.5rem;
       font-weight: 600;
-      margin-bottom: 8px;
       color: #fff;
+      margin-bottom: 6px;
     }
 
     .subtitle {
-      font-size: 0.85rem;
-      color: #666;
+      font-size: 0.83rem;
+      color: #555;
       margin-bottom: 36px;
     }
 
     .inputs {
       display: flex;
       gap: 16px;
-      margin-bottom: 24px;
+      margin-bottom: 16px;
     }
 
     .input-group {
@@ -54,7 +54,7 @@
     label {
       display: block;
       font-size: 0.75rem;
-      color: #888;
+      color: #777;
       margin-bottom: 6px;
       letter-spacing: 0.05em;
     }
@@ -66,7 +66,7 @@
       border: 1px solid #333;
       border-radius: 10px;
       color: #fff;
-      font-size: 1.1rem;
+      font-size: 1.05rem;
       outline: none;
       transition: border-color 0.2s;
       -moz-appearance: textfield;
@@ -75,8 +75,27 @@
     input[type="number"]::-webkit-inner-spin-button,
     input[type="number"]::-webkit-outer-spin-button { -webkit-appearance: none; }
 
-    input[type="number"]:focus {
-      border-color: #555;
+    input[type="number"]:focus { border-color: #555; }
+
+    .conditions-note {
+      background: #111;
+      border: 1px solid #2a2a2a;
+      border-radius: 10px;
+      padding: 14px 16px;
+      margin-bottom: 20px;
+      font-size: 0.76rem;
+      color: #555;
+      line-height: 2;
+    }
+
+    .conditions-note strong {
+      color: #666;
+      display: block;
+      margin-bottom: 4px;
+    }
+
+    .conditions-note span {
+      display: block;
     }
 
     button {
@@ -94,92 +113,217 @@
 
     button:hover { opacity: 0.85; }
 
-    .result {
-      display: none;
-      margin-top: 36px;
-      padding-top: 32px;
-      border-top: 1px solid #2e2e2e;
-    }
-
-    .stats {
-      display: flex;
-      justify-content: space-around;
-      gap: 8px;
-      margin-bottom: 28px;
-    }
-
-    .stat {
-      flex: 1;
-    }
-
-    .stat-value {
-      font-size: 1.6rem;
-      font-weight: 700;
-      color: #fff;
-      line-height: 1.1;
-    }
-
-    .stat-label {
-      font-size: 0.72rem;
-      color: #555;
-      margin-top: 4px;
-    }
-
-    .message {
-      font-size: 0.9rem;
-      color: #aaa;
-      line-height: 1.6;
-      font-style: italic;
-    }
-
     .error {
-      margin-top: 16px;
+      margin-top: 12px;
       font-size: 0.82rem;
       color: #e05;
       display: none;
+    }
+
+    .result {
+      display: none;
+      margin-top: 36px;
+    }
+
+    .section-label {
+      font-size: 0.7rem;
+      color: #444;
+      letter-spacing: 0.08em;
+      margin-bottom: 14px;
+      padding-bottom: 8px;
+      border-bottom: 1px solid #222;
+    }
+
+    .total-free {
+      text-align: center;
+      margin-bottom: 28px;
+    }
+
+    .total-free .big {
+      font-size: 2.8rem;
+      font-weight: 700;
+      color: #fff;
+      line-height: 1;
+    }
+
+    .total-free .unit {
+      font-size: 1rem;
+      color: #555;
+      margin-left: 4px;
+    }
+
+    .total-free .desc {
+      font-size: 0.78rem;
+      color: #444;
+      margin-top: 6px;
+    }
+
+    .split-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin-bottom: 28px;
+    }
+
+    .split-box {
+      background: #111;
+      border: 1px solid #2a2a2a;
+      border-radius: 12px;
+      padding: 18px 16px;
+      text-align: center;
+    }
+
+    .split-box .tag {
+      font-size: 0.72rem;
+      color: #555;
+      margin-bottom: 8px;
+    }
+
+    .split-box .val {
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: #fff;
+    }
+
+    .split-box .val-unit {
+      font-size: 0.75rem;
+      color: #444;
+      margin-top: 4px;
+    }
+
+    .excluded-list {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      margin-bottom: 28px;
+    }
+
+    .excluded-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: #111;
+      border: 1px solid #222;
+      border-radius: 10px;
+      padding: 14px 18px;
+    }
+
+    .excluded-item .name {
+      font-size: 0.82rem;
+      color: #666;
+    }
+
+    .excluded-item .name small {
+      display: block;
+      font-size: 0.68rem;
+      color: #3a3a3a;
+      margin-top: 3px;
+    }
+
+    .excluded-item .val {
+      font-size: 1rem;
+      font-weight: 600;
+      color: #888;
+    }
+
+    .excluded-item .val span {
+      font-size: 0.72rem;
+      color: #444;
+    }
+
+    .message {
+      text-align: center;
+      font-size: 0.88rem;
+      color: #555;
+      font-style: italic;
+      padding-top: 20px;
+      border-top: 1px solid #222;
     }
   </style>
 </head>
 <body>
   <div class="card">
-    <h1>남은 인생 계산기</h1>
-    <p class="subtitle">오늘부터 남은 시간을 확인해보세요</p>
+    <h1>나의 진짜 시간</h1>
+    <p class="subtitle">잠자고, 일하고, 이동하고 남은 시간</p>
 
     <div class="inputs">
       <div class="input-group">
-        <label>현재 나이</label>
-        <input type="number" id="age" placeholder="25" min="0" max="149" />
+        <label>출생 연도</label>
+        <input type="number" id="birthYear" placeholder="1990" min="1900" max="2025" />
       </div>
       <div class="input-group">
         <label>기대 수명</label>
-        <input type="number" id="life" placeholder="80" min="1" max="150" />
+        <input type="number" id="lifeExp" placeholder="80" min="1" max="150" />
       </div>
+    </div>
+
+    <div class="conditions-note">
+      <strong>계산 조건</strong>
+      <span>🌙 수면 — 하루 7시간, 전 기간 적용</span>
+      <span>🚌 출퇴근 — 평일 하루 2시간, 70세까지 적용</span>
+      <span>💼 업무 — 평일 하루 8시간, 70세까지 적용</span>
+      <span>📅 평일과 주말 비율은 5:2로 계산</span>
+      <span>📌 출생연도 기준 올해 나이로 계산</span>
     </div>
 
     <button onclick="calculate()">계산하기</button>
     <p class="error" id="error"></p>
 
     <div class="result" id="result">
-      <div class="stats">
-        <div class="stat">
-          <div class="stat-value" id="years">—</div>
-          <div class="stat-label">남은 년</div>
+
+      <div class="total-free">
+        <div>
+          <span class="big" id="totalFree">—</span>
+          <span class="unit">시간</span>
         </div>
-        <div class="stat">
-          <div class="stat-value" id="days">—</div>
-          <div class="stat-label">남은 일</div>
+        <div class="desc" id="totalFreeDesc"></div>
+      </div>
+
+      <div class="section-label">자유 시간 — 평일 / 주말</div>
+      <div class="split-grid">
+        <div class="split-box">
+          <div class="tag">평일 자유 시간</div>
+          <div class="val" id="weekdayFree">—</div>
+          <div class="val-unit">시간</div>
         </div>
-        <div class="stat">
-          <div class="stat-value" id="hours">—</div>
-          <div class="stat-label">남은 시간</div>
+        <div class="split-box">
+          <div class="tag">주말 자유 시간</div>
+          <div class="val" id="weekendFree">—</div>
+          <div class="val-unit">시간</div>
         </div>
       </div>
+
+      <div class="section-label">항목별 총 제외 시간</div>
+      <div class="excluded-list">
+        <div class="excluded-item">
+          <div class="name">
+            수면
+            <small>하루 7시간 × 전 기간</small>
+          </div>
+          <div class="val"><span id="sleepHours">—</span> <span>시간</span></div>
+        </div>
+        <div class="excluded-item">
+          <div class="name">
+            출퇴근
+            <small>평일 하루 2시간 × 70세까지</small>
+          </div>
+          <div class="val"><span id="commuteHours">—</span> <span>시간</span></div>
+        </div>
+        <div class="excluded-item">
+          <div class="name">
+            업무
+            <small>평일 하루 8시간 × 70세까지</small>
+          </div>
+          <div class="val"><span id="workHours">—</span> <span>시간</span></div>
+        </div>
+      </div>
+
       <p class="message" id="message"></p>
     </div>
   </div>
 
   <script>
-    const MESSAGES = [
+    const 메시지목록 = [
       "지금 이 순간도 당신의 인생입니다.",
       "남은 시간은 아직 충분히 많습니다.",
       "오늘 하루가 가장 젊은 날입니다.",
@@ -190,45 +334,69 @@
     ];
 
     function fmt(n) {
-      if (n >= 1_000_000) return (n / 1_000_000).toFixed(1) + "M";
-      if (n >= 10_000)    return Math.round(n / 1000) + "k";
-      return n.toLocaleString("ko-KR");
+      return Math.round(n).toLocaleString("ko-KR");
     }
 
     function calculate() {
-      const age  = parseInt(document.getElementById("age").value);
-      const life = parseInt(document.getElementById("life").value);
-      const err  = document.getElementById("error");
-      const res  = document.getElementById("result");
+      const birthYear = parseInt(document.getElementById("birthYear").value);
+      const lifeExp   = parseInt(document.getElementById("lifeExp").value);
+      const err       = document.getElementById("error");
+      const res       = document.getElementById("result");
 
       err.style.display = "none";
       res.style.display = "none";
 
-      if (isNaN(age) || isNaN(life)) {
-        err.textContent = "나이와 기대 수명을 모두 입력해주세요.";
-        err.style.display = "block";
-        return;
+      const currentYear = new Date().getFullYear();
+      const age = currentYear - birthYear;
+
+      if (isNaN(birthYear) || isNaN(lifeExp)) {
+        err.textContent = "출생 연도와 기대 수명을 모두 입력해주세요.";
+        err.style.display = "block"; return;
       }
-      if (age < 0 || life < 1) {
-        err.textContent = "올바른 값을 입력해주세요.";
-        err.style.display = "block";
-        return;
+      if (birthYear < 1900 || birthYear > currentYear) {
+        err.textContent = "올바른 출생 연도를 입력해주세요.";
+        err.style.display = "block"; return;
       }
-      if (age >= life) {
+      if (age >= lifeExp) {
         err.textContent = "기대 수명은 현재 나이보다 커야 합니다.";
-        err.style.display = "block";
-        return;
+        err.style.display = "block"; return;
       }
 
-      const remYears = life - age;
-      const remDays  = Math.round(remYears * 365.25);
-      const remHours = remDays * 24;
+      const 은퇴나이    = 70;
+      const 남은년수    = lifeExp - age;
+      const 근무년수    = Math.max(0, Math.min(은퇴나이 - age, 남은년수));
+      const 은퇴후년수  = Math.max(0, 남은년수 - 근무년수);
 
-      document.getElementById("years").textContent = fmt(remYears);
-      document.getElementById("days").textContent  = fmt(remDays);
-      document.getElementById("hours").textContent = fmt(remHours);
-      document.getElementById("message").textContent =
-        MESSAGES[Math.floor(Math.random() * MESSAGES.length)];
+      const 남은일수    = 남은년수   * 365.25;
+      const 근무일수    = 근무년수   * 365.25;
+      const 은퇴후일수  = 은퇴후년수 * 365.25;
+
+      // 평일(5/7) / 주말(2/7)
+      const 근무평일    = 근무일수   * (5 / 7);
+      const 근무주말    = 근무일수   * (2 / 7);
+      const 은퇴평일    = 은퇴후일수 * (5 / 7);
+      const 은퇴주말    = 은퇴후일수 * (2 / 7);
+
+      // 평일 자유시간: 근무기간 7시간, 은퇴 후 17시간
+      // 주말 자유시간: 17시간 (항상)
+      const 평일자유    = 근무평일 * 7 + 은퇴평일 * 17;
+      const 주말자유    = (근무주말 + 은퇴주말) * 17;
+      const 총자유      = 평일자유 + 주말자유;
+
+      const 수면시간    = 남은일수 * 7;
+      const 출퇴근시간  = 근무평일 * 2;
+      const 업무시간    = 근무평일 * 8;
+
+      document.getElementById("totalFree").textContent    = fmt(총자유);
+      document.getElementById("totalFreeDesc").textContent =
+        `현재 ${age}세 기준 약 ${남은년수}년 남음`;
+      document.getElementById("weekdayFree").textContent  = fmt(평일자유);
+      document.getElementById("weekendFree").textContent  = fmt(주말자유);
+      document.getElementById("sleepHours").textContent   = fmt(수면시간);
+      document.getElementById("commuteHours").textContent = fmt(출퇴근시간);
+      document.getElementById("workHours").textContent    = fmt(업무시간);
+      document.getElementById("message").textContent      =
+        메시지목록[Math.floor(Math.random() * 메시지목록.length)];
 
       res.style.display = "block";
     }
