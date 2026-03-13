@@ -1,0 +1,407 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Calculator 3D</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      /* Radial gradient gives a sense of a lit stage */
+      background: radial-gradient(ellipse at 50% 40%, #1a1a2e 0%, #0a0a0f 70%);
+      font-family: 'Inter', sans-serif;
+      /* 3D perspective for the whole scene */
+      perspective: 1200px;
+    }
+
+    /* ── Scene wrapper: tilted in 3D space ────────────── */
+    .scene {
+      transform-style: preserve-3d;
+      /* Tilt the calculator toward the viewer */
+      transform: rotateX(8deg) rotateY(-4deg);
+      transition: transform 0.6s cubic-bezier(0.23, 1, 0.32, 1);
+      filter: drop-shadow(0 60px 80px rgba(0,0,0,0.8));
+    }
+    .scene:hover {
+      transform: rotateX(2deg) rotateY(0deg);
+    }
+
+    /* ── Calculator body ───────────────────────────────── */
+    .calc {
+      width: 320px;
+      background: linear-gradient(160deg, #1e1e28 0%, #14141b 100%);
+      border-radius: 24px;
+      overflow: hidden;
+      position: relative;
+      /* Top-left highlight edge — simulates a light source above-left */
+      box-shadow:
+        /* outer glow */
+        0 0 0 1px rgba(255,255,255,0.07),
+        /* top-left lit edge */
+        -1px -1px 0 1px rgba(255,255,255,0.12),
+        /* right-bottom shadow edge */
+        2px 2px 0 2px rgba(0,0,0,0.6),
+        /* ambient depth shadow */
+        0 40px 80px -10px rgba(0,0,0,0.9),
+        /* violet glow underneath */
+        0 20px 40px -10px rgba(94,106,210,0.25);
+    }
+
+    /* Glossy top sheen */
+    .calc::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      border-radius: 24px;
+      background: linear-gradient(
+        135deg,
+        rgba(255,255,255,0.06) 0%,
+        transparent 50%
+      );
+      pointer-events: none;
+      z-index: 10;
+    }
+
+    /* ── Display ───────────────────────────────────────── */
+    .display {
+      padding: 28px 24px 20px;
+      text-align: right;
+      background: linear-gradient(180deg, #0e0e15 0%, #16161f 100%);
+      border-bottom: 1px solid rgba(255,255,255,0.05);
+      /* Inset shadow: makes display look recessed */
+      box-shadow:
+        inset 0 2px 8px rgba(0,0,0,0.6),
+        inset 0 1px 2px rgba(0,0,0,0.8);
+    }
+
+    .display__history {
+      font-size: 13px;
+      color: rgba(255,255,255,0.28);
+      min-height: 20px;
+      margin-bottom: 8px;
+      letter-spacing: 0.02em;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .display__value {
+      font-size: 44px;
+      font-weight: 300;
+      color: #fff;
+      letter-spacing: -0.02em;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      /* Subtle text glow */
+      text-shadow: 0 0 30px rgba(255,255,255,0.15);
+    }
+
+    /* ── Button Grid ───────────────────────────────────── */
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 10px;
+      padding: 14px;
+      background: transparent;
+    }
+
+    /* ── 3D Button base ────────────────────────────────── */
+    .btn-wrap {
+      /* Each button is wrapped so we can do 3D press */
+      transform-style: preserve-3d;
+      position: relative;
+    }
+
+    button {
+      all: unset;
+      cursor: pointer;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      width: 100%;
+      height: 66px;
+      border-radius: 14px;
+      font-family: 'Inter', sans-serif;
+      font-size: 18px;
+      font-weight: 500;
+      position: relative;
+      /* translateZ lifts button off the surface */
+      transform: translateZ(6px);
+      transition:
+        transform 0.08s ease,
+        box-shadow 0.08s ease,
+        background 0.1s ease;
+      user-select: none;
+    }
+
+    /* Pressed state: push down in Z */
+    button:active {
+      transform: translateZ(1px) !important;
+    }
+
+    /* ── Number keys ───────────────────────────────────── */
+    .btn-num {
+      background: linear-gradient(160deg, #252531 0%, #1c1c27 100%);
+      color: rgba(255,255,255,0.88);
+      box-shadow:
+        /* top highlight */
+        0 1px 0 rgba(255,255,255,0.10) inset,
+        /* bottom shadow */
+        0 -1px 0 rgba(0,0,0,0.4) inset,
+        /* raised 3D shadow */
+        0 6px 0 #0d0d13,
+        0 8px 16px rgba(0,0,0,0.5);
+    }
+    .btn-num:hover {
+      background: linear-gradient(160deg, #2d2d3d 0%, #232330 100%);
+      box-shadow:
+        0 1px 0 rgba(255,255,255,0.12) inset,
+        0 -1px 0 rgba(0,0,0,0.4) inset,
+        0 6px 0 #0d0d13,
+        0 8px 20px rgba(0,0,0,0.55);
+    }
+    .btn-num:active {
+      box-shadow:
+        0 1px 0 rgba(0,0,0,0.3) inset,
+        0 2px 0 #0d0d13,
+        0 2px 6px rgba(0,0,0,0.4);
+    }
+
+    /* ── Function keys ─────────────────────────────────── */
+    .btn-fn {
+      background: linear-gradient(160deg, #242432 0%, #1a1a26 100%);
+      color: #9B9DB5;
+      font-size: 15px;
+      box-shadow:
+        0 1px 0 rgba(255,255,255,0.08) inset,
+        0 -1px 0 rgba(0,0,0,0.4) inset,
+        0 6px 0 #0d0d13,
+        0 8px 16px rgba(0,0,0,0.5);
+    }
+    .btn-fn:hover {
+      background: linear-gradient(160deg, #2c2c3e 0%, #22222e 100%);
+      color: #B8BAD5;
+    }
+    .btn-fn:active {
+      box-shadow:
+        0 1px 0 rgba(0,0,0,0.3) inset,
+        0 2px 0 #0d0d13,
+        0 2px 6px rgba(0,0,0,0.4);
+    }
+
+    /* ── Operator keys ─────────────────────────────────── */
+    .btn-op {
+      background: linear-gradient(160deg, #22233a 0%, #191928 100%);
+      color: #6B76E8;
+      font-size: 22px;
+      box-shadow:
+        0 1px 0 rgba(255,255,255,0.06) inset,
+        0 -1px 0 rgba(0,0,0,0.5) inset,
+        0 6px 0 #0a0a18,
+        0 8px 20px rgba(94,106,210,0.2);
+    }
+    .btn-op:hover {
+      background: linear-gradient(160deg, #2a2b47 0%, #202033 100%);
+      color: #8590f0;
+    }
+    .btn-op:active {
+      box-shadow:
+        0 1px 0 rgba(0,0,0,0.3) inset,
+        0 2px 0 #0a0a18,
+        0 2px 8px rgba(94,106,210,0.3);
+    }
+    .btn-op.active-op {
+      background: linear-gradient(160deg, #2e2f52 0%, #22233e 100%);
+      color: #a5adf8;
+      box-shadow:
+        0 1px 0 rgba(255,255,255,0.08) inset,
+        0 -1px 0 rgba(0,0,0,0.4) inset,
+        0 6px 0 #0a0a18,
+        0 8px 24px rgba(94,106,210,0.35);
+    }
+
+    /* ── Equals key ────────────────────────────────────── */
+    .btn-eq {
+      background: linear-gradient(160deg, #7580e8 0%, #4d59c8 100%);
+      color: #fff;
+      font-size: 22px;
+      box-shadow:
+        /* top shine */
+        0 1px 0 rgba(255,255,255,0.25) inset,
+        0 -1px 0 rgba(0,0,0,0.3) inset,
+        /* 3D raised bottom */
+        0 6px 0 #2a2f8a,
+        /* violet glow */
+        0 8px 24px rgba(94,106,210,0.55);
+    }
+    .btn-eq:hover {
+      background: linear-gradient(160deg, #8590ec 0%, #5a66d0 100%);
+    }
+    .btn-eq:active {
+      box-shadow:
+        0 1px 0 rgba(0,0,0,0.2) inset,
+        0 2px 0 #2a2f8a,
+        0 2px 12px rgba(94,106,210,0.4);
+    }
+
+    /* ── Zero key ──────────────────────────────────────── */
+    .btn-zero {
+      grid-column: span 2;
+      justify-content: flex-start;
+      padding-left: 26px;
+    }
+  </style>
+</head>
+<body>
+
+<div class="scene">
+  <div class="calc">
+    <!-- Display -->
+    <div class="display">
+      <div class="display__history" id="history"></div>
+      <div class="display__value"   id="value">0</div>
+    </div>
+
+    <!-- Buttons -->
+    <div class="grid">
+      <button class="btn-fn"  data-action="clear">AC</button>
+      <button class="btn-fn"  data-action="sign">+/−</button>
+      <button class="btn-fn"  data-action="percent">%</button>
+      <button class="btn-op"  data-action="op" data-op="÷">÷</button>
+
+      <button class="btn-num" data-action="digit" data-digit="7">7</button>
+      <button class="btn-num" data-action="digit" data-digit="8">8</button>
+      <button class="btn-num" data-action="digit" data-digit="9">9</button>
+      <button class="btn-op"  data-action="op" data-op="×">×</button>
+
+      <button class="btn-num" data-action="digit" data-digit="4">4</button>
+      <button class="btn-num" data-action="digit" data-digit="5">5</button>
+      <button class="btn-num" data-action="digit" data-digit="6">6</button>
+      <button class="btn-op"  data-action="op" data-op="−">−</button>
+
+      <button class="btn-num" data-action="digit" data-digit="1">1</button>
+      <button class="btn-num" data-action="digit" data-digit="2">2</button>
+      <button class="btn-num" data-action="digit" data-digit="3">3</button>
+      <button class="btn-op"  data-action="op" data-op="+">+</button>
+
+      <button class="btn-num btn-zero" data-action="digit" data-digit="0">0</button>
+      <button class="btn-num"          data-action="dot">.</button>
+      <button class="btn-eq"           data-action="equal">=</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  // ── State ────────────────────────────────────────────
+  let current  = '0';
+  let stored   = null;
+  let operator = null;
+  let justCalc = false;
+
+  const valueEl   = document.getElementById('value');
+  const historyEl = document.getElementById('history');
+
+  function fmt(n) {
+    const s = parseFloat(n.toPrecision(10)).toString();
+    return s.length > 12 ? n.toExponential(4) : s;
+  }
+
+  function updateDisplay(val, hist = null) {
+    valueEl.textContent = val;
+    if (hist !== null) historyEl.textContent = hist;
+  }
+
+  function compute(a, op, b) {
+    switch (op) {
+      case '+': return a + b;
+      case '−': return a - b;
+      case '×': return a * b;
+      case '÷': return b === 0 ? NaN : a / b;
+    }
+  }
+
+  function highlightOp(op) {
+    document.querySelectorAll('.btn-op').forEach(btn => {
+      btn.classList.toggle('active-op', btn.dataset.op === op);
+    });
+  }
+
+  // ── Mouse-tracking tilt ──────────────────────────────
+  const scene = document.querySelector('.scene');
+  document.addEventListener('mousemove', e => {
+    const cx = window.innerWidth  / 2;
+    const cy = window.innerHeight / 2;
+    const dx = (e.clientX - cx) / cx;   // −1 … +1
+    const dy = (e.clientY - cy) / cy;
+    // Subtle parallax tilt following cursor
+    scene.style.transform =
+      `rotateX(${8 - dy * 5}deg) rotateY(${-4 + dx * 6}deg)`;
+  });
+  document.addEventListener('mouseleave', () => {
+    scene.style.transform = 'rotateX(8deg) rotateY(-4deg)';
+  });
+
+  // ── Button logic ──────────────────────────────────────
+  document.querySelector('.grid').addEventListener('click', e => {
+    const btn = e.target.closest('button');
+    if (!btn) return;
+    const action = btn.dataset.action;
+
+    if (action === 'digit') {
+      const d = btn.dataset.digit;
+      if (justCalc || current === '0') { current = d; justCalc = false; }
+      else { if (current.length >= 12) return; current += d; }
+      updateDisplay(current);
+    }
+    else if (action === 'dot') {
+      if (justCalc) { current = '0'; justCalc = false; }
+      if (!current.includes('.')) current += '.';
+      updateDisplay(current);
+    }
+    else if (action === 'op') {
+      const op = btn.dataset.op;
+      if (operator && !justCalc) {
+        const result = compute(parseFloat(stored), operator, parseFloat(current));
+        stored = isNaN(result) ? 'Error' : fmt(result);
+        updateDisplay(stored);
+        current = stored;
+      } else { stored = current; }
+      operator = op;
+      justCalc = true;
+      historyEl.textContent = `${stored} ${op}`;
+      highlightOp(op);
+    }
+    else if (action === 'equal') {
+      if (!operator || stored === null) return;
+      const a = parseFloat(stored), b = parseFloat(current);
+      const result = compute(a, operator, b);
+      const display = isNaN(result) ? 'Error' : fmt(result);
+      updateDisplay(display, `${fmt(a)} ${operator} ${fmt(b)} =`);
+      current = display; stored = null; operator = null; justCalc = true;
+      highlightOp(null);
+    }
+    else if (action === 'clear') {
+      current = '0'; stored = null; operator = null; justCalc = false;
+      updateDisplay('0', '');
+      highlightOp(null);
+    }
+    else if (action === 'sign') {
+      current = fmt(parseFloat(current) * -1);
+      updateDisplay(current);
+    }
+    else if (action === 'percent') {
+      current = fmt(parseFloat(current) / 100);
+      updateDisplay(current);
+    }
+  });
+</script>
+</body>
+</html>
