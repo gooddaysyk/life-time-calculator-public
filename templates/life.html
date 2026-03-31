@@ -281,6 +281,84 @@
       padding-top: 20px;
       border-top: 1.5px solid #edf0f5;
     }
+
+    /* 라이프 타임라인 바 */
+    .timeline-wrap {
+      margin-bottom: 28px;
+    }
+
+    .timeline-bar {
+      position: relative;
+      height: 20px;
+      border-radius: 10px;
+      overflow: hidden;
+      background: #e4e8f0;
+      display: flex;
+    }
+
+    .timeline-lived {
+      height: 100%;
+      background: linear-gradient(90deg, #3d5af1, #6b82f5);
+      border-radius: 10px 0 0 10px;
+      transition: width 0.6s ease;
+      flex-shrink: 0;
+    }
+
+    .timeline-remaining {
+      height: 100%;
+      background: linear-gradient(90deg, #f59e0b, #fbbf24);
+      transition: width 0.6s ease;
+      flex-shrink: 0;
+    }
+
+    .timeline-ticks {
+      position: relative;
+      height: 22px;
+      margin-top: 4px;
+    }
+
+    .timeline-tick {
+      position: absolute;
+      transform: translateX(-50%);
+      font-size: 0.68rem;
+      color: #8a93a6;
+      font-weight: 600;
+    }
+
+    .timeline-tick::before {
+      content: '';
+      display: block;
+      width: 1px;
+      height: 6px;
+      background: #c8cdd8;
+      margin: 0 auto 2px;
+    }
+
+    .timeline-legend {
+      display: flex;
+      gap: 16px;
+      margin-top: 10px;
+      justify-content: center;
+    }
+
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 0.72rem;
+      color: #6b7484;
+    }
+
+    .legend-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+
+    .legend-dot.lived    { background: linear-gradient(90deg, #3d5af1, #6b82f5); }
+    .legend-dot.remaining { background: linear-gradient(90deg, #f59e0b, #fbbf24); }
+    .legend-dot.empty    { background: #e4e8f0; }
   </style>
 </head>
 <body>
@@ -312,6 +390,20 @@
     <p class="error" id="error"></p>
 
     <div class="result" id="result">
+
+      <div class="section-label">인생 타임라인 (0 ~ 80세)</div>
+      <div class="timeline-wrap">
+        <div class="timeline-bar">
+          <div class="timeline-lived"    id="barLived"></div>
+          <div class="timeline-remaining" id="barRemaining"></div>
+        </div>
+        <div class="timeline-ticks" id="timelineTicks"></div>
+        <div class="timeline-legend">
+          <div class="legend-item"><div class="legend-dot lived"></div> 살아온 시간</div>
+          <div class="legend-item"><div class="legend-dot remaining"></div> 남은 시간</div>
+          <div class="legend-item"><div class="legend-dot empty"></div> 기대 수명 초과</div>
+        </div>
+      </div>
 
       <div class="section-label">남은 인생</div>
       <div class="remain-row">
@@ -442,6 +534,30 @@
       const 수면시간    = 남은일수 * 7;
       const 출퇴근시간  = 근무평일 * 2;
       const 업무시간    = 근무평일 * 8;
+
+      // 타임라인 바 업데이트 (기준: 80세)
+      const 기준수명 = 80;
+      const livedPct     = Math.min(age, 기준수명) / 기준수명 * 100;
+      const remainingPct = Math.max(0, Math.min(lifeExp, 기준수명) - age) / 기준수명 * 100;
+
+      document.getElementById("barLived").style.width     = livedPct + "%";
+      document.getElementById("barRemaining").style.width = remainingPct + "%";
+
+      // 눈금 (0, 20, 40, 60, 80)
+      const ticksEl = document.getElementById("timelineTicks");
+      ticksEl.innerHTML = "";
+      [0, 20, 40, 60, 80].forEach(yr => {
+        const pct  = yr / 기준수명 * 100;
+        const tick = document.createElement("div");
+        tick.className = "timeline-tick";
+        tick.style.left = pct + "%";
+        tick.textContent = yr + "세";
+        if (yr === age) {
+          tick.style.color = "#3d5af1";
+          tick.style.fontWeight = "700";
+        }
+        ticksEl.appendChild(tick);
+      });
 
       document.getElementById("remainDays").textContent   = fmt(남은일수);
       document.getElementById("remainHours").textContent  = fmt(남은일수 * 24);
